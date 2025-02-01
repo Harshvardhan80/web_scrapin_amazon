@@ -101,16 +101,13 @@ def extract_product_details(item):
     except ValueError:
         numerical_price = float('inf')
 
-    product_data = {
+    return {
         "title": title,
         "price": price,
         "numerical_price": numerical_price,
         "link": product_link,
         "main_image": img_url
     }
-
-    save_to_db(product_collection, product_data, "title")
-    return product_data
 
 def amazon_login(driver):
     try:
@@ -276,18 +273,49 @@ def login_amazon_and_continue(product_url):
 def find_lowest_price_item(items, department):
     lowest_price = float('inf')
     lowest_price_item = None
+    lowest_price_details = None
 
     for item in items:
         if "Sponsored" in item.get_text():
             continue
 
-        product_details = extract_product_details(item)
-        if not product_details or not is_valid_price(product_details["numerical_price"], department):
+        title_elem = item.find("h2")
+        price_elem = item.find("span", class_="a-price-whole")
+        price_fraction = item.find("span", class_="a-price-fraction")
+        link_elem = item.find("a", class_="a-link-normal")
+        img_elem = item.find("img", class_="s-image")
+
+        title = title_elem.get_text(strip=True) if title_elem else "No title found"
+        price = price_elem.get_text(strip=True) if price_elem else "No price found"
+        if price_fraction and price != "No price found":
+            price += f".{price_fraction.get_text(strip=True)}"
+
+        product_link = f"https://www.amazon.in{link_elem['href']}" if link_elem else "No link found"
+        img_url = img_elem['src'] if img_elem else "No Image found"
+
+        try:
+            numerical_price = float(price.replace(",", "").strip())
+        except ValueError:
             continue
 
-        if product_details["numerical_price"] < lowest_price:
-            lowest_price = product_details["numerical_price"]
-            lowest_price_item = product_details
+        if not is_valid_price(numerical_price, department):
+            continue
+
+        if numerical_price < lowest_price:
+            lowest_price = numerical_price
+            product_data = {
+                "title": title,
+                "price": price,
+                "numerical_price": numerical_price,
+                "link": product_link,
+                "main_image": img_url
+            }
+            lowest_price_details = product_data
+            lowest_price_item = product_data
+
+    # Only save to database if we found a valid lowest price item
+    if lowest_price_details:
+        save_to_db(product_collection, lowest_price_details, "title")
 
     return lowest_price_item
 
