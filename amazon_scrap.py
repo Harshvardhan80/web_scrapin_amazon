@@ -63,37 +63,9 @@ def create_driver(headless=True):
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
     try:
-        # Try to find Chrome binary
-        chrome_binary = None
-        possible_paths = [
-            "/usr/bin/google-chrome-stable",
-            "/usr/bin/google-chrome",
-            "google-chrome",  # Search in PATH
-        ]
-        
-        for path in possible_paths:
-            try:
-                if path.startswith("/"):
-                    if os.path.exists(path):
-                        chrome_binary = path
-                        break
-                else:
-                    # Try to find in PATH
-                    import subprocess
-                    result = subprocess.run(['which', path], capture_output=True, text=True)
-                    if result.returncode == 0:
-                        chrome_binary = result.stdout.strip()
-                        break
-            except Exception as e:
-                logger.debug(f"Failed to check path {path}: {e}")
-                continue
-        
-        if chrome_binary:
-            options.binary_location = chrome_binary
-            logger.info(f"Using Chrome binary at: {chrome_binary}")
-        else:
-            logger.warning("Chrome binary not found in standard locations, letting ChromeDriver decide")
-        
+        # Manually set the Chrome binary location
+        options.binary_location = "/usr/bin/google-chrome"  # This is the path for Render environment
+
         # Create service with specific chrome version
         try:
             chrome_version = subprocess.check_output(['google-chrome', '--version']).decode().strip().split()[-1]
@@ -115,7 +87,7 @@ def create_driver(headless=True):
                     raise
                 logger.warning(f"Attempt {attempt + 1} failed: {e}")
                 time.sleep(2 * (attempt + 1))  # Exponential backoff
-                
+    
     except Exception as e:
         error_msg = f"Failed to create Chrome driver: {str(e)}"
         logger.error(error_msg)
