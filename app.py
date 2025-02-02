@@ -25,7 +25,6 @@ def create_app(*args, **kwargs):  # Allow any arguments to be passed
 # ✅ Flask application object ko export karein (Gunicorn isko load karega)
 app = create_app()
 
-# Ensure the application only runs locally and not when Gunicorn is used
 if __name__ == '__main__':
     # When running locally, ensure the app binds to the correct port
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))

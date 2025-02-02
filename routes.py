@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, Flask
+from flask import Blueprint, jsonify, request
 from database import product_collection, order_collection
 from bson import ObjectId
 from amazon_scrap import (
@@ -56,6 +56,10 @@ def validate_objectid(id_str):
         return ObjectId(id_str)
     except:
         raise ValueError(f"Invalid ObjectId format: {id_str}")
+
+@routes.route('/', methods=['GET'])
+def home():
+    return jsonify({"message": "App is running"}), 200
 
 @routes.route('/scrape_amazon', methods=['POST'])
 @handle_exceptions
@@ -117,18 +121,6 @@ def build_search_url(query, department):
         base_url += f"&i={department}"
     base_url += "&rh=n%3A976419031%2Cp_n_format_browse-bin%3A19150304031"
     return base_url
-
-def create_app():
-    """Create and configure Flask application."""
-    app = Flask(__name__)
-    app.json_encoder = MongoJSONEncoder
-    app.register_blueprint(routes)
-    return app
-
-# Add root route to handle requests to the root URL
-@routes.route('/')
-def home():
-    return "Service is running!"
 
 @routes.route('/get_products', methods=['GET'])
 @handle_exceptions
