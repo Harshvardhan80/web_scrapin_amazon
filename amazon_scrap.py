@@ -49,53 +49,77 @@ def create_driver(headless=True):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     
-    # More robust Chrome binary detection
-    chrome_binary_paths = [
-        "/usr/bin/google-chrome-stable",  # Linux
-        "/usr/bin/google-chrome",         # Alternative Linux path
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",  # MacOS
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",        # Windows
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"   # Windows 32-bit
-    ]
-    
-    chrome_binary = None
-    for path in chrome_binary_paths:
-        if os.path.exists(path):
-            chrome_binary = path
-            break
-    
-    if not chrome_binary:
-        raise Exception("Chrome binary not found. Please install Google Chrome or specify the correct path.")
-    
-    options.binary_location = chrome_binary
-    
-    # Additional options for better stability
+    # Cloud-friendly Chrome options
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    if headless:
-        options.add_argument("--headless=new")  # Using new headless mode
+    options.add_argument("--disable-software-rasterizer")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--remote-debugging-port=9222")
     
-    # Custom user agent to avoid detection
+    # Custom user agent
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    
+
     try:
-        # Install chromedriver using webdriver_manager with retry logic
-        for _ in range(3):  # Try 3 times
+        # Try to find Chrome binary
+        chrome_binary = None
+        possible_paths = [
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/google-chrome",
+            "google-chrome",  # Search in PATH
+        ]
+        
+        for path in possible_paths:
             try:
-                service = Service(ChromeDriverManager().install())
+                if path.startswith("/"):
+                    if os.path.exists(path):
+                        chrome_binary = path
+                        break
+                else:
+                    # Try to find in PATH
+                    import subprocess
+                    result = subprocess.run(['which', path], capture_output=True, text=True)
+                    if result.returncode == 0:
+                        chrome_binary = result.stdout.strip()
+                        break
+            except Exception as e:
+                logger.debug(f"Failed to check path {path}: {e}")
+                continue
+        
+        if chrome_binary:
+            options.binary_location = chrome_binary
+            logger.info(f"Using Chrome binary at: {chrome_binary}")
+        else:
+            logger.warning("Chrome binary not found in standard locations, letting ChromeDriver decide")
+        
+        # Create service with specific chrome version
+        try:
+            chrome_version = subprocess.check_output(['google-chrome', '--version']).decode().strip().split()[-1]
+            logger.info(f"Detected Chrome version: {chrome_version}")
+            service = Service(ChromeDriverManager(version=chrome_version).install())
+        except Exception as e:
+            logger.warning(f"Failed to get Chrome version, using latest: {e}")
+            service = Service(ChromeDriverManager().install())
+        
+        # Create driver with retry logic
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
                 driver = webdriver.Chrome(service=service, options=options)
+                logger.info("Successfully created Chrome driver")
                 return driver
             except Exception as e:
-                logger.warning(f"Attempt to create driver failed: {e}")
-                time.sleep(2)  # Wait before retry
-        
-        raise Exception("Failed to create Chrome driver after multiple attempts")
-        
+                if attempt == max_retries - 1:
+                    raise
+                logger.warning(f"Attempt {attempt + 1} failed: {e}")
+                time.sleep(2 * (attempt + 1))  # Exponential backoff
+                
     except Exception as e:
-        logger.error(f"Failed to create Chrome driver: {e}")
-        raise
-
+        error_msg = f"Failed to create Chrome driver: {str(e)}"
+        logger.error(error_msg)
+        raise Exception(error_msg)
 
 def get_soup(url, driver):
     try:
