@@ -48,10 +48,16 @@ def create_driver(headless=True):
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
+    
+    # Set the path to the Chrome binary (path can vary depending on your system)
+    options.binary_location = "/usr/bin/google-chrome-stable"  # Chrome binary ka path yahaan daalein
+
     options.headless = headless
 
-    service = Service(ChromeDriverManager().install())
+    # Install chromedriver using webdriver_manager and create driver instance
+    service = Service(ChromeDriverManager().install())  # This will install the compatible chromedriver
     return webdriver.Chrome(service=service, options=options)
+
 
 def get_soup(url, driver):
     try:
