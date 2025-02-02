@@ -54,13 +54,12 @@ def create_driver(headless=True):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     
-    # Set the correct path to the Chrome binary
-    options.binary_location = "/usr/bin/google-chrome"  # Updated path
+    # Try using the pre-installed Chrome binary
+    options.binary_location = "/usr/bin/google-chrome-stable"  # Path to Chrome in Render
 
     if headless:
         options.add_argument("--headless")
 
-    # Install chromedriver using webdriver_manager and create driver instance
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
