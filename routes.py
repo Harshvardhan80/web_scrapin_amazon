@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
-from database import product_collection, order_collection
 from bson import ObjectId
+import logging
+from json import JSONEncoder
 from amazon_scrap import (
     get_department_id,
     get_soup,
@@ -9,8 +10,7 @@ from amazon_scrap import (
     login_amazon_and_continue,
     create_driver
 )
-import logging
-from json import JSONEncoder
+from database import product_collection, order_collection
 from functools import wraps
 
 # Custom JSONEncoder to handle ObjectId
@@ -57,9 +57,10 @@ def validate_objectid(id_str):
     except:
         raise ValueError(f"Invalid ObjectId format: {id_str}")
 
+# Root endpoint to verify that the app is running
 @routes.route('/', methods=['GET'])
 def home():
-    return jsonify({"message": "App is running"}), 200
+    return jsonify({"message": "App is running"}), 200  # Proper response object
 
 @routes.route('/scrape_amazon', methods=['POST'])
 @handle_exceptions

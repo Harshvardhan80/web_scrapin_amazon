@@ -2,7 +2,7 @@ from flask import Flask
 from dotenv import load_dotenv
 import logging
 import os
-from routes import routes, MongoJSONEncoder  # Import Blueprint and JSON Encoder
+from routes import routes, MongoJSONEncoder  # Import Blueprint and custom JSON Encoder
 
 # Load environment variables
 load_dotenv()
