@@ -11,7 +11,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def create_app():
+def create_app(*args, **kwargs):  # Allow any arguments to be passed
     app = Flask(__name__)
     
     # Register custom JSON encoder
@@ -26,4 +26,5 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=os.getenv('FLASK_ENV', 'development') == 'development')
+    # When running locally, ensure the app binds to the correct port
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))
