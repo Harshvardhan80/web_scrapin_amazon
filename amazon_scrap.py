@@ -48,18 +48,24 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+
 def create_driver(headless=True):
     options = Options()
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     
-    # Try using the pre-installed Chrome binary
-    options.binary_location = "/usr/bin/google-chrome-stable"  # Path to Chrome in Render
+    # Path to the pre-installed Chrome (common in cloud environments like Render)
+    options.binary_location = "/usr/bin/google-chrome-stable"  # Update this path as needed
 
     if headless:
         options.add_argument("--headless")
 
+    # Use WebDriver Manager to manage ChromeDriver version
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
