@@ -2,7 +2,7 @@ from flask import Flask
 from dotenv import load_dotenv
 import logging
 import os
-from routes import routes, MongoJSONEncoder  # Import both Blueprint and MongoJSONEncoder
+from routes import routes, MongoJSONEncoder  # Import Blueprint and JSON Encoder
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +22,8 @@ def create_app():
     
     return app
 
+# ✅ Flask application object ko export karein (Gunicorn isko load karega)
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=os.getenv('FLASK_ENV', 'development') == 'development')
