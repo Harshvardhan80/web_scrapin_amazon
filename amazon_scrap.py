@@ -43,20 +43,32 @@ def get_department_id(query):
             return department
     return 'all'
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 def create_driver(headless=True):
     options = Options()
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     
-    # Set the path to the Chrome binary (path can vary depending on your system)
-    options.binary_location = "/usr/bin/google-chrome-stable"  # Chrome binary ka path yahaan daalein
+    # Set the correct path to the Chrome binary
+    options.binary_location = "/usr/bin/google-chrome"  # Updated path
 
-    options.headless = headless
+    if headless:
+        options.add_argument("--headless")
 
     # Install chromedriver using webdriver_manager and create driver instance
-    service = Service(ChromeDriverManager().install())  # This will install the compatible chromedriver
+    service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
+
+# Test the driver
+driver = create_driver(headless=False)
+driver.get("https://www.google.com")
+print(driver.title)
+driver.quit()
 
 
 def get_soup(url, driver):
