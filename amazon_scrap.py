@@ -49,49 +49,15 @@ def create_driver(headless=True):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     
-    # Cloud-friendly Chrome options
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-software-rasterizer")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--remote-debugging-port=9222")
-    
-    # Custom user agent
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    # Set the path to the Chrome binary (path can vary depending on your system)
+    options.binary_location = "/usr/bin/google-chrome-stable"  # Chrome binary ka path yahaan daalein
 
-    try:
-        # Manually set the Chrome binary location
-        options.binary_location = "/usr/bin/google-chrome"  # This is the path for Render environment
+    options.headless = headless
 
-        # Create service with specific chrome version
-        try:
-            chrome_version = subprocess.check_output(['google-chrome', '--version']).decode().strip().split()[-1]
-            logger.info(f"Detected Chrome version: {chrome_version}")
-            service = Service(ChromeDriverManager(version=chrome_version).install())
-        except Exception as e:
-            logger.warning(f"Failed to get Chrome version, using latest: {e}")
-            service = Service(ChromeDriverManager().install())
-        
-        # Create driver with retry logic
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                driver = webdriver.Chrome(service=service, options=options)
-                logger.info("Successfully created Chrome driver")
-                return driver
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    raise
-                logger.warning(f"Attempt {attempt + 1} failed: {e}")
-                time.sleep(2 * (attempt + 1))  # Exponential backoff
-    
-    except Exception as e:
-        error_msg = f"Failed to create Chrome driver: {str(e)}"
-        logger.error(error_msg)
-        raise Exception(error_msg)
+    # Install chromedriver using webdriver_manager and create driver instance
+    service = Service(ChromeDriverManager().install())  # This will install the compatible chromedriver
+    return webdriver.Chrome(service=service, options=options)
+
 
 def get_soup(url, driver):
     try:
