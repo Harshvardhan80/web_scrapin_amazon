@@ -125,6 +125,11 @@ def create_app():
     app.register_blueprint(routes)
     return app
 
+# Add root route to handle requests to the root URL
+@routes.route('/')
+def home():
+    return "Service is running!"
+
 @routes.route('/get_products', methods=['GET'])
 @handle_exceptions
 def get_products():
