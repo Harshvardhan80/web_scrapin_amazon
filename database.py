@@ -24,16 +24,19 @@ def get_database_connection():
         return None
 
 def get_collections(db):
-    """Get product and order collections from the database."""
+    """Get product, order, and sold_products collections from the database."""
     if db is not None:
         product_collection = db["products"]
         order_collection = db["orders"]
-        return product_collection, order_collection
-    return None, None
+        sold_products_collection = db["sold_products"]  # नया Collection
+        return product_collection, order_collection, sold_products_collection
+    return None, None, None
 
 # Initialize database connection and collections
 database = get_database_connection()
 product_collection = None
 order_collection = None
+sold_products_collection = None  # नया Collection
+
 if database is not None:
-    product_collection, order_collection = get_collections(database)
+    product_collection, order_collection, sold_products_collection = get_collections(database)
